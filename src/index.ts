@@ -7,23 +7,40 @@ export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const { pathname } = new URL(request.url);
 
-		if (pathname === "/api/price/history/anti") {
-			const { results } = await env.DB.prepare("SELECT * FROM prices WHERE address = ?")
-			.bind(ANTI_ADDRESS)
-			.all();
-
-			return Response.json(results);
-		} else if (pathname === "/api/price/history/pro") {
-			const { results } = await env.DB.prepare("SELECT * FROM prices WHERE address = ?")
-			.bind(PRO_ADDRESS)
-			.all();
-
-			return Response.json(results);
+		switch (pathname) {
+			case "/api/price/history/anti":
+				return getHistory(env, ANTI_ADDRESS);
+			case "/api/price/history/pro":
+				return getHistory(env, PRO_ADDRESS);
+			case "/api/price/anti":
+				return getPrice(env, ANTI_ADDRESS);
+			case "/api/price/pro":
+				return getPrice(env, PRO_ADDRESS);
+			case "/api/price/hourly/anti":
+				return getHourlyPrices(env, ANTI_ADDRESS);
+			case "/api/price/hourly/pro":
+				return getHourlyPrices(env, PRO_ADDRESS);
+			case "/api/price/daily/anti":
+				return getDailyPrices(env, ANTI_ADDRESS);
+			case "/api/price/daily/pro":
+				return getDailyPrices(env, PRO_ADDRESS);
+			case "/api/mcap/anti":
+				return getMarketCap(env, ANTI_ADDRESS);
+			case "/api/mcap/pro":
+				return getMarketCap(env, ANTI_ADDRESS);
+			case "/api/mcap/history/anti":
+				return getMarketCapHistory(env, ANTI_ADDRESS);
+			case "/api/mcap/history/pro":
+				return getMarketCapHistory(env, PRO_ADDRESS);
+			case "/api/mcap/daily/anti":
+				return getDailyMarketCaps(env, ANTI_ADDRESS);
+			case "/api/mcap/daily/pro":
+				return getDailyMarketCaps(env, PRO_ADDRESS);
+			default:
+				return Response.json({error: "Invalid request"}, {
+				status: 404,
+			});
 		}
-
-		return  new Response("Invalid request", {
-			status: 404
-		});
 	},
 
 	async scheduled(event, env, ctx) {
@@ -184,5 +201,98 @@ async function getTokenSupply(mint: string) : Promise<string> {
 	} catch (error: any) {
 		console.error(`Error fetching token supply for ${mint}: `, error.message);
 		throw error;
+	}
+}
+
+async function getPrice(env : Env, address: string) : Promise<Response> {
+	try {
+		const result = await env.DB.prepare("SELECT * from prices WHERE address = ? ORDER BY timestamp DESC LIMIT 1")
+			.bind(address)
+			.first();
+
+		if (result) {
+			return Response.json(result);
+		} else {
+			return Response.json({error: "Could not get the price"})
+		}
+	} catch (error) {
+		console.error(`Error fetching price for ${address}:`, error);
+		return Response.json({error: "Could not get the price"})
+	}
+}
+
+async function getHistory(env : Env, address : string) : Promise<Response> {
+	try {
+			const { results } = await env.DB.prepare("SELECT * FROM prices WHERE address = ?")
+			.bind(address)
+			.all();
+
+			return Response.json(results);
+	} catch (error) {
+		console.error(`Error fetching history for ${address}:`, error);
+		return Response.json({ error: "Could not get the history" })
+	}
+}
+
+async function getHourlyPrices(env: Env, address: string): Promise<Response> {
+	try {
+		const { results } = await env.DB.prepare("SELECT * from hourly_prices WHERE address = ?").bind(address).all();
+
+		return Response.json(results);
+	} catch (error) {
+		console.error(`Error fetching hourly prices for ${address}:`, error);
+		return Response.json({ error: "Could not get hourly prices" })
+	}
+}
+
+async function getDailyPrices(env: Env, address: string): Promise<Response> {
+	try {
+		const { results } = await env.DB.prepare("SELECT * from daily_prices WHERE address = ?").bind(address).all();
+
+		return Response.json(results);
+	} catch (error) {
+		console.error(`Error fetching daily prices for ${address}:`, error);
+		return Response.json({ error: "Could not get daily prices" })
+	}
+}
+
+async function getMarketCap(env : Env, address: string) : Promise<Response> {
+	try {
+		const result = await env.DB.prepare("SELECT * from market_caps WHERE address = ? ORDER BY timestamp DESC LIMIT 1")
+			.bind(address)
+			.first();
+
+		if (result) {
+			return Response.json(result);
+		} else {
+			return Response.json({error: "Could not get the market cap"})
+		}
+	} catch (error) {
+		console.error(`Error fetching market cap for ${address}:`, error);
+		return Response.json({error: "Could not get the market cap"})
+	}
+}
+
+async function getMarketCapHistory(env : Env, address : string) : Promise<Response> {
+	try {
+			const { results } = await env.DB.prepare("SELECT * FROM market_caps WHERE address = ?")
+			.bind(address)
+			.all();
+
+			return Response.json(results);
+	} catch (error) {
+		console.error(`Error fetching market cap history for ${address}:`, error);
+		return Response.json({ error: "Could not get the market cap history" })
+	}
+}
+
+async function getDailyMarketCaps(env: Env, address: string): Promise<Response> {
+	try {
+		const { results } = await env.DB.prepare("SELECT * from daily_market_caps WHERE address = ?").bind(address).all();
+
+		return Response.json(results);
+	} catch (error) {
+		console.error(`Error fetching daily market caps for ${address}:`, error);
+		return Response.json({ error: "Could not get daily market caps" })
 	}
 }
