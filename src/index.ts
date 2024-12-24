@@ -37,6 +37,7 @@ export default {
 				await indexHourlyAveragePrice(env);
 			} else if (cronExpression == "0 0 * * *") {
 				await indexDailyAveragePrice(env);
+				await indexDailyAverageMarketCap(env);
 			}
 		} catch (error) {
 			console.error(`Error handling CRON ${cronExpression}:`, error);
@@ -101,6 +102,25 @@ async function indexDailyAveragePrice(env: Env) : Promise<void> {
 	INSERT INTO daily_prices (address, price)
 	SELECT address, average_price
 	FROM avg_prices;
+	`
+	try {
+		await env.DB.prepare(query).run();
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function indexDailyAverageMarketCap(env: Env) : Promise<void> {
+	const query = `
+	WITH avg_market_caps AS (
+		SELECT address, AVG(market_cap) AS average_market_cap
+		FROM market_caps
+		WHERE timestamp >= datetime('now', '-1 day')
+		GROUP BY address
+	)
+	INSERT INTO daily_market_caps (address, market_cap)
+	SELECT address, average_market_cap
+	FROM avg_market_caps;
 	`
 	try {
 		await env.DB.prepare(query).run();

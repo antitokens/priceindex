@@ -31,3 +31,11 @@ CREATE TABLE
     price REAL NOT NULL,
     PRIMARY KEY (timestamp, address)
   );
+
+CREATE TABLE
+  IF NOT EXISTS daily_market_caps (
+    timestamp TEXT DEFAULT (datetime ('now', 'utc')),
+    address TEXT NOT NULL,
+    market_cap REAL NOT NULL,
+    PRIMARY KEY (timestamp, address)
+  );
