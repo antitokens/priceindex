@@ -81,7 +81,13 @@ async function indexMarketCap(env: Env) : Promise<void> {
 	const marketCapPro : Decimal = new Decimal(prices.proPrice).times(supplies[1]);
 
 	try {
-		await env.DB.prepare("INSERT INTO market_caps(source, address, market_cap) VALUES ('raydium', ?, ?), ('raydium', ?, ?)")
+		const query = `
+		INSERT INTO market_caps(source, address, market_cap)
+		VALUES
+			('raydium', ?, ?),
+			('raydium', ?, ?)
+		`
+		await env.DB.prepare(query)
 			.bind(ANTI_ADDRESS, marketCapAnti.toString(), PRO_ADDRESS, marketCapPro.toString())
 			.run();
 	} catch (error) {
