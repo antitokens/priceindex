@@ -76,7 +76,7 @@ async function indexPrices(env: Env) : Promise<void> {
 async function indexMarketCap(env: Env) : Promise<void> {
 	const prices : any = await getPrices(env);
 	const mints = [ANTI_ADDRESS, PRO_ADDRESS];
-	const supplies = await getTokenSupplies(mints);
+	const supplies = await getTokenSupplies(env, mints);
 	const marketCapAnti : Decimal = new Decimal(prices.antiPrice).times(supplies[0]);
 	const marketCapPro : Decimal = new Decimal(prices.proPrice).times(supplies[1]);
 
@@ -167,10 +167,10 @@ async function getPrices(env: Env) : Promise<any> {
 }
 
 
-async function getTokenSupplies(mints: Array<string>) : Promise<any> {
+async function getTokenSupplies(env: Env, mints: Array<string>) : Promise<any> {
 	try {
 		const results = await Promise.all(
-			mints.map((mint) => getTokenSupply(mint))
+			mints.map((mint) => getTokenSupply(env, mint))
 		);
 
 		return results;
@@ -179,8 +179,8 @@ async function getTokenSupplies(mints: Array<string>) : Promise<any> {
 	}
 }
 
-async function getTokenSupply(mint: string) : Promise<string> {
-	const solanaRpcURL = "https://api.mainnet-beta.solana.com";
+async function getTokenSupply(env: Env, mint: string) : Promise<string> {
+	const solanaRpcURL = `https://lingering-evocative-friday.solana-mainnet.quiknode.pro/${env.QUICKNODE_API_KEY}`;
 	const body = {
 		jsonrpc: "2.0",
 		id: 1,
