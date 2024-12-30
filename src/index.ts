@@ -180,7 +180,7 @@ async function getTokenSupplies(env: Env, mints: Array<string>) : Promise<any> {
 }
 
 async function getTokenSupply(env: Env, mint: string) : Promise<string> {
-	const solanaRpcURL = `https://lingering-evocative-friday.solana-mainnet.quiknode.pro/${env.QUICKNODE_API_KEY}`;
+	const solanaRpcURL = env.SOLANA_RPC_URL;
 	const body = {
 		jsonrpc: "2.0",
 		id: 1,
